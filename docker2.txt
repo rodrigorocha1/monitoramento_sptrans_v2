@@ -19,6 +19,8 @@ services:
     ports:
       - "9092:9092"
       - "9093:9093"
+    volumes:
+      - ./kafka_data:/var/lib/kafka/data
     networks:
       kafka-net:
         ipv4_address: 172.20.0.2
@@ -29,65 +31,41 @@ services:
     depends_on:
       - broker
     environment:
+      KSQL_CONFIG_DIR: "/etc/ksqldb"
       KSQL_BOOTSTRAP_SERVERS: "broker:9092"
       KSQL_LISTENERS: "http://0.0.0.0:8088"
       KSQL_KSQL_SERVICE_ID: "sptrans_service"
     ports:
       - "8088:8088"
-    networks:
-      kafka-net:
-        ipv4_address: 172.20.0.3
-
-#  sptrans-producer:
-#    build: ./producer
-#    container_name: sptrans-producer
-#    depends_on:
-#      - broker
-#    networks:
-#      kafka-net:
-#        ipv4_address: 172.20.0.7
-
-  postgres:
-    image: timescale/timescaledb:latest-pg14
-    container_name: postgres
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: sptrans
-    ports:
-      - "5432:5432"
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - ./ksqldb_data:/var/lib/ksqldb-server/data
     networks:
       kafka-net:
         ipv4_address: 172.20.0.4
 
-#  consumer:
-#    build: ./consumer
-#    container_name: kafka-to-postgres
-#    depends_on:
-#      - broker
-#      - postgres
-#      - ksqldb-server
-#    networks:
-#      kafka-net:
-#        ipv4_address: 172.20.0.5
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
+  ksqldb-cli:
+    image: confluentinc/ksqldb-cli:latest
+    container_name: ksqldb-cli
+    entrypoint: /bin/sh
+    tty: true
     depends_on:
-      - postgres
-    ports:
-      - "3000:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-    volumes:
-      - ./grafana_data:/var/lib/grafana
+      - ksqldb-server
     networks:
-      kafka-net:
-        ipv4_address: 172.20.0.6
+      - kafka-net
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: ""
+    ports:
+      - "8080:8080"
+    depends_on:
+      - broker
+    networks:
+      - kafka-net
 
   ksqldb-ui:
     image: deniskrumko/ksqldb-ui:latest
@@ -102,7 +80,26 @@ services:
       - ksqldb-server
     networks:
       - kafka-net
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    depends_on:
+      - broker
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./grafana_data:/var/lib/grafana
+    networks:
+      kafka-net:
+        ipv4_address: 172.20.0.21
 
+volumes:
+  kafka_data:
+  ksqldb_data:
+  grafana_data:
 
 networks:
   kafka-net:

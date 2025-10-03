@@ -1,0 +1,7 @@
+startDelaySeconds: 0
+jmxUrl: ""
+ssl: false
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+rules:
+  - pattern: "kafka.server<type=(.+), name=(.+)><>(Count|Value)"

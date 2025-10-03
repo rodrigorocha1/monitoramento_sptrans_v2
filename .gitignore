@@ -1,3 +1,7 @@
 .venv/
 *.xml
 *.iml
+.venv
+.env
+grafana_data/
+*#
