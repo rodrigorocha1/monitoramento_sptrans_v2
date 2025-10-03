@@ -80,10 +80,26 @@ services:
       - ksqldb-server
     networks:
       - kafka-net
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    depends_on:
+      - broker
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./grafana_data:/var/lib/grafana
+    networks:
+      kafka-net:
+        ipv4_address: 172.20.0.21
 
 volumes:
   kafka_data:
   ksqldb_data:
+  grafana_data:
 
 networks:
   kafka-net:
