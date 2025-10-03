@@ -1,0 +1,17 @@
+# Global parameters
+[global]
+branding = "ksqldb-ui"
+display_version = true
+language = "en"
+show_hints = true
+
+[http]
+timeout = 60
+
+[history]
+enabled = true
+size = 50
+
+# Servers configurations
+[servers.localhost]
+url = "http://ksqldb-server:8088"
